@@ -34,17 +34,44 @@ public class StructureCommand implements TabExecutor {
                 sender.sendMessage(new MessageUtils("&cYou don't have permission to use this").color());
                 return false;
             }
-            if (args.length != 2) {
+            if (args.length != 2 && args.length != 6) {
                 sender.sendMessage(new MessageUtils("&cUsage: /structures spawn <structure-id>").color());
+                sender.sendMessage(new MessageUtils("&cUsage: /structures spawn <structure-id> <world_name> <x> <y> <z>").color());
                 return false;
             }
-            Structure structure = mainManager.getStructureManager().getStructureById().get(args[1]);
-            if (structure == null) {
-                sender.sendMessage(new MessageUtils("&cPlease enter a valid structure id").color());
-                return false;
+            if (args.length == 2) {
+                Structure structure = mainManager.getStructureManager().getStructureById().get(args[1]);
+                if (structure == null) {
+                    sender.sendMessage(new MessageUtils("&cPlease enter a valid structure id").color());
+                    return false;
+                }
+                structure.build(mainManager.getStructureManager());
+                sender.sendMessage(new MessageUtils("&aStructure built").color());
             }
-            structure.build(mainManager.getStructureManager());
-            sender.sendMessage(new MessageUtils("&aStructure built").color());
+            if (args.length == 6) {
+                Structure structure = mainManager.getStructureManager().getStructureById().get(args[1]);
+                if (structure == null) {
+                    sender.sendMessage(new MessageUtils("&cPlease enter a valid structure id").color());
+                    return false;
+                }
+                World world = Bukkit.getWorld(args[2]);
+                if (world == null) {
+                    return false;
+                }
+                double x;
+                double y;
+                double z;
+                try {
+                    x = Double.parseDouble(args[3]);
+                    y = Double.parseDouble(args[4]);
+                    z = Double.parseDouble(args[5]);
+                }catch (NumberFormatException exp) {
+                    return false;
+                }
+                Location location = new Location(world, x, y, z);
+                structure.build(mainManager.getStructureManager(), location);
+                sender.sendMessage(new MessageUtils("&aStructure built").color());
+            }
         }
         if (args[0].equalsIgnoreCase("random")) {
             if (!sender.hasPermission("mortisstructures.random")) {

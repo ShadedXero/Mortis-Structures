@@ -14,6 +14,7 @@ import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.World;
+import org.bukkit.block.Biome;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
@@ -107,23 +108,39 @@ public class MainConfig extends Config {
             boolean town = checks.getBoolean("town");
             boolean water = checks.getBoolean("water");
             boolean lava = checks.getBoolean("lava");
-            List<Material> hasBlocks = null;
-            if (checks.contains("has-blocks")) {
-                hasBlocks = new ArrayList<>();
-                for (String line : checks.getStringList("has-blocks")) {
+            List<Material> mustHaveBlocks = null;
+            if (checks.contains("must-have-blocks")) {
+                mustHaveBlocks = new ArrayList<>();
+                for (String line : checks.getStringList("must-have-blocks")) {
                     Material material = Material.valueOf(line);
-                    hasBlocks.add(material);
+                    mustHaveBlocks.add(material);
                 }
             }
-            List<Material> hasNotBlocks = null;
-            if (checks.contains("has-not-blocks")) {
-                hasNotBlocks = new ArrayList<>();
-                for (String line : checks.getStringList("has-not-blocks")) {
+            List<Material> mustNotHaveBlocks = null;
+            if (checks.contains("must-not-have-blocks")) {
+                mustNotHaveBlocks = new ArrayList<>();
+                for (String line : checks.getStringList("must-not-have-blocks")) {
                     Material material = Material.valueOf(line);
-                    hasNotBlocks.add(material);
+                    mustNotHaveBlocks.add(material);
                 }
             }
-            StructureChecks check = new StructureChecks(town, water, lava, hasBlocks, hasNotBlocks);
+            List<Biome> mustHaveBiomes = null;
+            if (checks.contains("must-have-biomes")) {
+                mustHaveBiomes = new ArrayList<>();
+                for (String line : checks.getStringList("must-have-biomes")) {
+                    Biome biome = Biome.valueOf(line);
+                    mustHaveBiomes.add(biome);
+                }
+            }
+            List<Biome> mustNotHaveBiomes = null;
+            if (checks.contains("must-not-have-biomes")) {
+                mustNotHaveBiomes = new ArrayList<>();
+                for (String line : checks.getStringList("must-not-have-biomes")) {
+                    Biome biome = Biome.valueOf(line);
+                    mustNotHaveBiomes.add(biome);
+                }
+            }
+            StructureChecks check = new StructureChecks(town, water, lava, mustHaveBlocks, mustNotHaveBlocks, mustHaveBiomes, mustNotHaveBiomes);
             Structure struc = new Structure(key, clipboard, type, world, loc1, loc2, unbreakable, spawns, interval, despawn, tries, check, mobs, commandsOnSpawn, commandsOnDeSpawn);
             getConfigManager().getMainManager().getStructureManager().getStructures().add(struc);
             getConfigManager().getMainManager().getStructureManager().getStructureById().put(key, struc);

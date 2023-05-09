@@ -1,6 +1,7 @@
 package me.none030.mortisstructures.structure;
 
 import org.bukkit.Material;
+import org.bukkit.block.Biome;
 
 import java.util.List;
 
@@ -9,15 +10,19 @@ public class StructureChecks {
     private final boolean isInTown;
     private final boolean isInWater;
     private final boolean isInLava;
-    private final List<Material> isInBlocks;
-    private final List<Material> isNotInBlocks;
+    private final List<Material> mustHaveBlocks;
+    private final List<Material> mustNotHaveBlocks;
+    private final List<Biome> mustHaveBiomes;
+    private final List<Biome> mustNotHaveBiomes;
 
-    public StructureChecks(boolean isInTown, boolean isInWater, boolean isInLava, List<Material> isInBlocks, List<Material> isNotInBlocks) {
+    public StructureChecks(boolean isInTown, boolean isInWater, boolean isInLava, List<Material> mustHaveBlocks, List<Material> mustNotHaveBlocks, List<Biome> mustHaveBiomes, List<Biome> mustNotHaveBiomes) {
         this.isInTown = isInTown;
         this.isInWater = isInWater;
         this.isInLava = isInLava;
-        this.isInBlocks = isInBlocks;
-        this.isNotInBlocks = isNotInBlocks;
+        this.mustHaveBlocks = mustHaveBlocks;
+        this.mustNotHaveBlocks = mustNotHaveBlocks;
+        this.mustHaveBiomes = mustHaveBiomes;
+        this.mustNotHaveBiomes = mustNotHaveBiomes;
     }
 
     public boolean hasTown() {
@@ -32,11 +37,19 @@ public class StructureChecks {
         return isInLava;
     }
 
-    public List<Material> hasBlocks() {
-        return isInBlocks;
+    public List<Material> getMustHaveBlocks() {
+        return mustHaveBlocks;
     }
 
-    public List<Material> hasNotBlocks() {
-        return isNotInBlocks;
+    public List<Material> getMustNotHaveBlocks() {
+        return mustNotHaveBlocks;
+    }
+
+    public List<Biome> getMustHaveBiomes() {
+        return mustHaveBiomes;
+    }
+
+    public List<Biome> getMustNotHaveBiomes() {
+        return mustNotHaveBiomes;
     }
 }

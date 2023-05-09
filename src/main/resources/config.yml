@@ -22,7 +22,11 @@ schematics:
       town: true # Stops structure from spawning in a town
       water: false # Stops structure from spawning in water
       lava: false # Stops structure from spawning in lava
-      has-blocks: # Stops structure from spawning if the specified blocks are not near the spawning location
+      must-have-blocks: # Stops structure from spawning if the specified blocks are not near the spawning location
         - GRASS_BLOCK
-      has-not-blocks: # Stops structure from spawning if the specified blocks are near the spawning location
+      must-not-have-blocks: # Stops structure from spawning if the specified blocks are near the spawning location
         - SAND
+      must-have-biomes:
+        - DESERT
+      must-not-have-biomes:
+        - PLAINS

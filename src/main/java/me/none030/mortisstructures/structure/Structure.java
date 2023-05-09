@@ -17,6 +17,7 @@ import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.World;
+import org.bukkit.block.Biome;
 import org.bukkit.block.Block;
 
 import java.time.LocalDateTime;
@@ -91,6 +92,32 @@ public class Structure {
             if (location == null) {
                 continue;
             }
+            manager.add(location);
+            BlockVector3 paste = BlockVector3.at(location.getX(), location.getY(), location.getZ());
+            storeData(paste);
+            try (EditSession session = WorldEdit.getInstance().newEditSession(BukkitAdapter.adapt(getWorld()))) {
+                Operation operation = new ClipboardHolder(getClipboard())
+                        .createPaste(session)
+                        .to(paste)
+                        .ignoreAirBlocks(true)
+                        .build();
+                Operations.complete(operation);
+            }
+            if (mobs != null) {
+                for (Mob mob : mobs) {
+                    Location loc = new Location(world, location.getX(), location.getY() + getRadius().getY(), location.getZ());
+                    mob.spawn(loc);
+                }
+            }
+            for (String line : commandsOnSpawn) {
+                String command = line.replace("%world%", world.getName()).replace("%x%", String.valueOf(location.getBlockX())).replace("%y%", String.valueOf(location.getBlockY())).replace("%z%", String.valueOf(location.getBlockZ()));
+                Bukkit.dispatchCommand(Bukkit.getConsoleSender(), command);
+            }
+        }
+    }
+
+    public void build(Manager manager, Location location) {
+        for (int i = 0; i < spawns; i++) {
             manager.add(location);
             BlockVector3 paste = BlockVector3.at(location.getX(), location.getY(), location.getZ());
             storeData(paste);
@@ -202,13 +229,23 @@ public class Structure {
                     continue;
                 }
             }
-            if (getChecks().hasBlocks() != null) {
+            if (getChecks().getMustHaveBlocks() != null) {
                 if (isInBlocks(locations)) {
                     continue;
                 }
             }
-            if (getChecks().hasNotBlocks() != null) {
+            if (getChecks().getMustNotHaveBlocks() != null) {
                 if (isNotInBlocks(locations)) {
+                    continue;
+                }
+            }
+            if (getChecks().getMustHaveBiomes() != null) {
+                if (isInBiomes(locations)) {
+                    continue;
+                }
+            }
+            if (getChecks().getMustNotHaveBiomes() != null) {
+                if (isNotInBiomes(locations)) {
                     continue;
                 }
             }
@@ -218,23 +255,24 @@ public class Structure {
     }
 
     private boolean isInBlocks(List<Location> locations) {
-        List<Material> blocks = checks.hasBlocks();
+        List<Material> blocks = checks.getMustHaveBlocks();
         for (Location location : locations) {
-            for (Material block : blocks) {
-                if (location.getBlock().getType().equals(block)) {
-                    return true;
-                }
+            if (!blocks.contains(location.getBlock().getType())) {
+                continue;
             }
-        }
-        return false;
-    }
-
-    private boolean isNotInBlocks(List<Location> locations) {
-        List<Material> blocks = checks.hasBlocks();
-        for (Location location : locations) {
             blocks.remove(location.getBlock().getType());
         }
         return blocks.size() == 0;
+    }
+
+    private boolean isNotInBlocks(List<Location> locations) {
+        List<Material> blocks = checks.getMustNotHaveBlocks();
+        for (Location location : locations) {
+            if (blocks.contains(location.getBlock().getType())) {
+                return true;
+            }
+        }
+        return false;
     }
     
     private boolean isInWater(List<Location> locations) {
@@ -249,6 +287,27 @@ public class Structure {
     private boolean isInLava(List<Location> locations) {
         for (Location location : locations) {
             if (location.getBlock().getType().equals(Material.LAVA)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private boolean isInBiomes(List<Location> locations) {
+        List<Biome> biomes = checks.getMustHaveBiomes();
+        for (Location location : locations) {
+            if (!biomes.contains(location.getBlock().getBiome())) {
+                continue;
+            }
+            biomes.remove(location.getBlock().getBiome());
+        }
+        return biomes.size() == 0;
+    }
+
+    private boolean isNotInBiomes(List<Location> locations) {
+        List<Biome> biomes = checks.getMustNotHaveBiomes();
+        for (Location location : locations) {
+            if (biomes.contains(location.getBlock().getBiome())) {
                 return true;
             }
         }
