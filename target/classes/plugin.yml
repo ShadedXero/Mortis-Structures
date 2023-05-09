@@ -1,11 +1,12 @@
-name: MortisStructure
-version: 1.0
-main: me.none030.mortisstructure.MortisStructure
+name: MortisStructures
+version: '1.0'
+main: me.none030.mortisstructures.MortisStructures
 api-version: 1.13
-depend:
-  - WorldEdit
+softdepend:
   - Towny
   - MythicMobs
+depend:
+  - WorldEdit
 commands:
-  structure:
-    aliases: mortisstructure
+  structures:
+    aliases: mortisstructures

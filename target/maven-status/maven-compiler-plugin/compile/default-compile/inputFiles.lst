@@ -1,17 +1,20 @@
-C:\Users\muham\Desktop\Mortis Structure\src\main\java\me\none030\mortisstructure\utils\StructureMob.java
-C:\Users\muham\Desktop\Mortis Structure\src\main\java\me\none030\mortisstructure\structure\StructureListener.java
-C:\Users\muham\Desktop\Mortis Structure\src\main\java\me\none030\mortisstructure\utils\DespawnStructure.java
-C:\Users\muham\Desktop\Mortis Structure\src\main\java\me\none030\mortisstructure\utils\StructureType.java
-C:\Users\muham\Desktop\Mortis Structure\src\main\java\me\none030\mortisstructure\structure\StructureCommand.java
-C:\Users\muham\Desktop\Mortis Structure\src\main\java\me\none030\mortisstructure\structure\StructureMessages.java
-C:\Users\muham\Desktop\Mortis Structure\src\main\java\me\none030\mortisstructure\structure\DespawnManager.java
-C:\Users\muham\Desktop\Mortis Structure\src\main\java\me\none030\mortisstructure\structure\StructureManager.java
-C:\Users\muham\Desktop\Mortis Structure\src\main\java\me\none030\mortisstructure\config\ConfigManager.java
-C:\Users\muham\Desktop\Mortis Structure\src\main\java\me\none030\mortisstructure\MortisStructure.java
-C:\Users\muham\Desktop\Mortis Structure\src\main\java\me\none030\mortisstructure\utils\StructureBlock.java
-C:\Users\muham\Desktop\Mortis Structure\src\main\java\me\none030\mortisstructure\structure\Structure.java
-C:\Users\muham\Desktop\Mortis Structure\src\main\java\me\none030\mortisstructure\utils\MessageUtils.java
-C:\Users\muham\Desktop\Mortis Structure\src\main\java\me\none030\mortisstructure\data\DataManager.java
-C:\Users\muham\Desktop\Mortis Structure\src\main\java\me\none030\mortisstructure\data\SpawnManager.java
-C:\Users\muham\Desktop\Mortis Structure\src\main\java\me\none030\mortisstructure\utils\Checks.java
-C:\Users\muham\Desktop\Mortis Structure\src\main\java\me\none030\mortisstructure\structure\StructureMythicMob.java
+F:\Plugins\MortisStructures\src\main\java\me\none030\mortisstructures\config\MainConfig.java
+F:\Plugins\MortisStructures\src\main\java\me\none030\mortisstructures\config\Config.java
+F:\Plugins\MortisStructures\src\main\java\me\none030\mortisstructures\manager\MainManager.java
+F:\Plugins\MortisStructures\src\main\java\me\none030\mortisstructures\structure\Structure.java
+F:\Plugins\MortisStructures\src\main\java\me\none030\mortisstructures\data\Data.java
+F:\Plugins\MortisStructures\src\main\java\me\none030\mortisstructures\structure\StructureChecks.java
+F:\Plugins\MortisStructures\src\main\java\me\none030\mortisstructures\structure\StructureListener.java
+F:\Plugins\MortisStructures\src\main\java\me\none030\mortisstructures\structure\mob\StructureMob.java
+F:\Plugins\MortisStructures\src\main\java\me\none030\mortisstructures\manager\Manager.java
+F:\Plugins\MortisStructures\src\main\java\me\none030\mortisstructures\structure\mob\Mob.java
+F:\Plugins\MortisStructures\src\main\java\me\none030\mortisstructures\structure\mob\StructureMythicMob.java
+F:\Plugins\MortisStructures\src\main\java\me\none030\mortisstructures\manager\StructureCommand.java
+F:\Plugins\MortisStructures\src\main\java\me\none030\mortisstructures\config\ConfigManager.java
+F:\Plugins\MortisStructures\src\main\java\me\none030\mortisstructures\config\SchematicConfig.java
+F:\Plugins\MortisStructures\src\main\java\me\none030\mortisstructures\structure\StructureManager.java
+F:\Plugins\MortisStructures\src\main\java\me\none030\mortisstructures\data\StructureData.java
+F:\Plugins\MortisStructures\src\main\java\me\none030\mortisstructures\config\DataConfig.java
+F:\Plugins\MortisStructures\src\main\java\me\none030\mortisstructures\MortisStructures.java
+F:\Plugins\MortisStructures\src\main\java\me\none030\mortisstructures\utils\MessageUtils.java
+F:\Plugins\MortisStructures\src\main\java\me\none030\mortisstructures\structure\StructureType.java
