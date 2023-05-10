@@ -106,6 +106,7 @@ public class MainConfig extends Config {
                 continue;
             }
             boolean town = checks.getBoolean("town");
+            int townRange = checks.getInt("town-range");
             boolean water = checks.getBoolean("water");
             boolean lava = checks.getBoolean("lava");
             List<Material> mustHaveBlocks = null;
@@ -140,7 +141,7 @@ public class MainConfig extends Config {
                     mustNotHaveBiomes.add(biome);
                 }
             }
-            StructureChecks check = new StructureChecks(town, water, lava, mustHaveBlocks, mustNotHaveBlocks, mustHaveBiomes, mustNotHaveBiomes);
+            StructureChecks check = new StructureChecks(town, townRange, water, lava, mustHaveBlocks, mustNotHaveBlocks, mustHaveBiomes, mustNotHaveBiomes);
             Structure struc = new Structure(key, clipboard, type, world, loc1, loc2, unbreakable, spawns, interval, despawn, tries, check, mobs, commandsOnSpawn, commandsOnDeSpawn);
             getConfigManager().getMainManager().getStructureManager().getStructures().add(struc);
             getConfigManager().getMainManager().getStructureManager().getStructureById().put(key, struc);

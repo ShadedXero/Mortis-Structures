@@ -20,6 +20,7 @@ schematics:
       - "broadcast &aA structure just despawned"
     checks:
       town: true # Stops structure from spawning in a town
+      town-range: 100 # The range to look for a town
       water: false # Stops structure from spawning in water
       lava: false # Stops structure from spawning in lava
       must-have-blocks: # Stops structure from spawning if the specified blocks are not near the spawning location

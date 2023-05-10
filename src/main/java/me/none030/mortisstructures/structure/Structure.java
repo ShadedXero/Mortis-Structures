@@ -99,7 +99,7 @@ public class Structure {
                 Operation operation = new ClipboardHolder(getClipboard())
                         .createPaste(session)
                         .to(paste)
-                        .ignoreAirBlocks(true)
+                        .ignoreAirBlocks(false)
                         .build();
                 Operations.complete(operation);
             }
@@ -215,6 +215,9 @@ public class Structure {
             if (getChecks().hasTown()) {
                 if (plugin.hasTowny()) {
                     if (isInTown(locations)) {
+                        continue;
+                    }
+                    if (isTownInRange(location)) {
                         continue;
                     }
                 }
@@ -348,6 +351,22 @@ public class Structure {
             }
         }
         return null;
+    }
+
+    private boolean isTownInRange(Location location) {
+        int radius = checks.getTownRange();
+        TownyAPI town = TownyAPI.getInstance();
+        for (int x = location.getBlockX() - radius; x <= location.getBlockX() + radius; x++) {
+            for (int y = location.getWorld().getMinHeight(); y <= location.getWorld().getMaxHeight(); y++) {
+                for (int z = location.getBlockZ() - radius; z <= location.getBlockX() + radius; z++) {
+                    Location loc = new Location(location.getWorld(), x, y, z);
+                    if (!town.isWilderness(loc)) {
+                        return true;
+                    }
+                }
+            }
+        }
+        return false;
     }
 
     private boolean isInTown(List<Location> locations) {
