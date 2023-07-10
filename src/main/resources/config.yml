@@ -10,6 +10,7 @@ schematics:
     interval: 1 # in days
     despawn: 1 # in days
     tries: 10
+    replacement: BARRIER # Material which needs to be replaced to air
     mobs:
       - ZOMBIE:10
     mythic-mobs:

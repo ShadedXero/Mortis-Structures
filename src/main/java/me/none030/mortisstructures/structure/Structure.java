@@ -19,6 +19,7 @@ import org.bukkit.Material;
 import org.bukkit.World;
 import org.bukkit.block.Biome;
 import org.bukkit.block.Block;
+import org.bukkit.block.data.BlockData;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -41,12 +42,13 @@ public class Structure {
     private final int despawn;
     private BlockVector3 radius;
     private final int tries;
+    private final Material replacement;
     private final StructureChecks checks;
     private final List<Mob> mobs;
     private final List<String> commandsOnSpawn;
     private final List<String> commandsOnDeSpawn;
 
-    public Structure(String id, Clipboard clipboard, StructureType type, World world, Location location1, Location location2, boolean unbreakable, int spawns, int interval, int despawn, int tries, StructureChecks checks, List<Mob> mobs, List<String> commandsOnSpawn, List<String> commandsOnDeSpawn) {
+    public Structure(String id, Clipboard clipboard, StructureType type, World world, Location location1, Location location2, boolean unbreakable, int spawns, int interval, int despawn, int tries, Material replacement, StructureChecks checks, List<Mob> mobs, List<String> commandsOnSpawn, List<String> commandsOnDeSpawn) {
         this.id = id;
         this.clipboard = clipboard;
         this.type = type;
@@ -58,6 +60,7 @@ public class Structure {
         this.interval = interval;
         this.despawn = despawn;
         this.tries = tries;
+        this.replacement = replacement;
         this.checks = checks;
         this.mobs = mobs;
         this.commandsOnSpawn = commandsOnSpawn;
@@ -99,10 +102,11 @@ public class Structure {
                 Operation operation = new ClipboardHolder(getClipboard())
                         .createPaste(session)
                         .to(paste)
-                        .ignoreAirBlocks(false)
+                        .ignoreAirBlocks(true)
                         .build();
                 Operations.complete(operation);
             }
+            replace(paste);
             if (mobs != null) {
                 for (Mob mob : mobs) {
                     Location loc = new Location(world, location.getX(), location.getY() + getRadius().getY(), location.getZ());
@@ -129,6 +133,7 @@ public class Structure {
                         .build();
                 Operations.complete(operation);
             }
+            replace(paste);
             if (mobs != null) {
                 for (Mob mob : mobs) {
                     Location loc = new Location(world, location.getX(), location.getY() + getRadius().getY(), location.getZ());
@@ -138,6 +143,25 @@ public class Structure {
             for (String line : commandsOnSpawn) {
                 String command = line.replace("%world%", world.getName()).replace("%x%", String.valueOf(location.getBlockX())).replace("%y%", String.valueOf(location.getBlockY())).replace("%z%", String.valueOf(location.getBlockZ()));
                 Bukkit.dispatchCommand(Bukkit.getConsoleSender(), command);
+            }
+        }
+    }
+
+    private void replace(BlockVector3 center) {
+        int x1 = center.getX();
+        int y1 = center.getY() + getRadius().getY();
+        int z1 = center.getZ();
+        for (int x = x1 - getRadius().getX(); x <= x1 + getRadius().getX(); x++) {
+            for (int y = y1 - getRadius().getY(); y <= y1 + getRadius().getY(); y++) {
+                for (int z = z1 - getRadius().getZ(); z <= z1 + getRadius().getZ(); z++) {
+                    Block block = new Location(getWorld(), x, y, z).getBlock();
+                    if (block.getType().equals(replacement)) {
+                        BlockData blockData = Material.AIR.createBlockData();
+                        block.setBlockData(blockData);
+                        StructureData data = new StructureData(block.getLocation());
+                        data.setBlockData(blockData);
+                    }
+                }
             }
         }
     }
@@ -385,6 +409,10 @@ public class Structure {
 
     public void setRadius(BlockVector3 radius) {
         this.radius = radius;
+    }
+
+    public Material getReplacement() {
+        return replacement;
     }
 
     public StructureChecks getChecks() {

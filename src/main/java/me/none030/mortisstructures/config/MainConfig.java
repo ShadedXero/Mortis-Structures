@@ -57,6 +57,7 @@ public class MainConfig extends Config {
             List<String> commandsOnSpawn = structure.getStringList("command-on-spawn");
             List<String> commandsOnDeSpawn = structure.getStringList("command-on-despawn");
             boolean unbreakable = structure.getBoolean("unbreakable");
+            Material replacement = Material.valueOf(structure.getString("replacement"));
             List<Mob> mobs = new ArrayList<>();
             if (structure.contains("mobs")) {
                 for (String line : structure.getStringList("mobs")) {
@@ -142,7 +143,7 @@ public class MainConfig extends Config {
                 }
             }
             StructureChecks check = new StructureChecks(town, townRange, water, lava, mustHaveBlocks, mustNotHaveBlocks, mustHaveBiomes, mustNotHaveBiomes);
-            Structure struc = new Structure(key, clipboard, type, world, loc1, loc2, unbreakable, spawns, interval, despawn, tries, check, mobs, commandsOnSpawn, commandsOnDeSpawn);
+            Structure struc = new Structure(key, clipboard, type, world, loc1, loc2, unbreakable, spawns, interval, despawn, tries, replacement, check, mobs, commandsOnSpawn, commandsOnDeSpawn);
             getConfigManager().getMainManager().getStructureManager().getStructures().add(struc);
             getConfigManager().getMainManager().getStructureManager().getStructureById().put(key, struc);
         }
