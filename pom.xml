@@ -6,7 +6,7 @@
 
     <groupId>me.none030</groupId>
     <artifactId>MortisStructures</artifactId>
-    <version>2.3</version>
+    <version>2.4</version>
     <packaging>jar</packaging>
 
     <name>MortisStructures</name>
@@ -42,6 +42,10 @@
                                 <relocation>
                                     <pattern>com.jeff_media.customblockdata</pattern>
                                     <shadedPattern>me.none030.mortisstructures.customblockdata</shadedPattern>
+                                </relocation>
+                                <relocation>
+                                    <pattern>com.h2database.h2</pattern>
+                                    <shadedPattern>com.mortisdevelopment.mortismachines.h2</shadedPattern>
                                 </relocation>
                             </relocations>
                             <createDependencyReducedPom>false</createDependencyReducedPom>
@@ -97,7 +101,7 @@
         <dependency>
             <groupId>io.papermc.paper</groupId>
             <artifactId>paper-api</artifactId>
-            <version>1.19.3-R0.1-SNAPSHOT</version>
+            <version>1.18.2-R0.1-SNAPSHOT</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
@@ -132,6 +136,12 @@
             <groupId>com.jeff_media</groupId>
             <artifactId>CustomBlockData</artifactId>
             <version>2.2.0</version>
+            <scope>compile</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.h2database</groupId>
+            <artifactId>h2</artifactId>
+            <version>2.2.220</version>
             <scope>compile</scope>
         </dependency>
     </dependencies>

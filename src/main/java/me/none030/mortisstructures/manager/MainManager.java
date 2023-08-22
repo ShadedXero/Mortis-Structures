@@ -13,7 +13,6 @@ public class MainManager {
     private ConfigManager configManager;
 
     public MainManager() {
-        this.structureManager = new StructureManager();
         this.configManager = new ConfigManager(this);
         plugin.getServer().getPluginCommand("structures").setExecutor(new StructureCommand(this));
     }
@@ -21,7 +20,6 @@ public class MainManager {
     public void reload() {
         HandlerList.unregisterAll(plugin);
         Bukkit.getScheduler().cancelTasks(plugin);
-        setStructureManager(new StructureManager());
         setConfigManager(new ConfigManager(this));
     }
 

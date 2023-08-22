@@ -2,7 +2,6 @@ package me.none030.mortisstructures.structure;
 
 import me.none030.mortisstructures.data.StructureData;
 import org.bukkit.block.Block;
-import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockBreakEvent;
@@ -17,22 +16,18 @@ public class StructureListener implements Listener {
 
     @EventHandler
     public void onBreak(BlockBreakEvent e) {
-        Player player = e.getPlayer();
         Block block  = e.getBlock();
-        StructureData data = new StructureData(block.getLocation());
-        String id = data.getId();
-        if (id == null) {
+        StructureLocation location = new StructureLocation(block.getLocation());
+        StructureData data = structureManager.getDataManager().getStructure(location);
+        if (data == null) {
             return;
         }
-        Structure structure = structureManager.getStructureById().get(id);
+        Structure structure = structureManager.getStructureById().get(data.getId());
         if (structure == null) {
             return;
         }
-        e.setCancelled(true);
         if (structure.isUnbreakable()) {
-            return;
-        }else {
-            block.breakNaturally(player.getInventory().getItemInMainHand(), true, true);
+            e.setCancelled(true);
         }
     }
 }

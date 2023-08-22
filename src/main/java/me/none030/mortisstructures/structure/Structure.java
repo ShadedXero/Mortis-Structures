@@ -10,22 +10,18 @@ import com.sk89q.worldedit.function.operation.Operations;
 import com.sk89q.worldedit.math.BlockVector3;
 import com.sk89q.worldedit.session.ClipboardHolder;
 import me.none030.mortisstructures.MortisStructures;
+import me.none030.mortisstructures.data.DataManager;
+import me.none030.mortisstructures.data.StructureBlockData;
 import me.none030.mortisstructures.data.StructureData;
-import me.none030.mortisstructures.manager.Manager;
 import me.none030.mortisstructures.structure.mob.Mob;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
-import org.bukkit.World;
 import org.bukkit.block.Biome;
 import org.bukkit.block.Block;
-import org.bukkit.block.data.BlockData;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Random;
-import java.util.UUID;
+import java.util.*;
 
 public class Structure {
 
@@ -33,9 +29,9 @@ public class Structure {
     private final String id;
     private final Clipboard clipboard;
     private final StructureType type;
-    private final World world;
-    private final Location location1;
-    private final Location location2;
+    private final StructureWorld world;
+    private final StructureLocation location1;
+    private final StructureLocation location2;
     private final boolean unbreakable;
     private final int spawns;
     private final int interval;
@@ -48,7 +44,7 @@ public class Structure {
     private final List<String> commandsOnSpawn;
     private final List<String> commandsOnDeSpawn;
 
-    public Structure(String id, Clipboard clipboard, StructureType type, World world, Location location1, Location location2, boolean unbreakable, int spawns, int interval, int despawn, int tries, Material replacement, StructureChecks checks, List<Mob> mobs, List<String> commandsOnSpawn, List<String> commandsOnDeSpawn) {
+    public Structure(String id, Clipboard clipboard, StructureType type, StructureWorld world, StructureLocation location1, StructureLocation location2, boolean unbreakable, int spawns, int interval, int despawn, int tries, Material replacement, StructureChecks checks, List<Mob> mobs, List<String> commandsOnSpawn, List<String> commandsOnDeSpawn) {
         this.id = id;
         this.clipboard = clipboard;
         this.type = type;
@@ -89,116 +85,92 @@ public class Structure {
         getClipboard().setOrigin(BlockVector3.at(minX + halfX, y, minZ + halfZ));
     }
 
-    public void build(Manager manager) {
+    private void build(DataManager dataManager, BlockVector3 pasteVector) {
+        List<StructureLocation> locations = storeData(dataManager, pasteVector);
+        try (EditSession session = WorldEdit.getInstance().newEditSession(BukkitAdapter.adapt(getWorld().getWorld()))) {
+            Operation operation = new ClipboardHolder(getClipboard())
+                    .createPaste(session)
+                    .to(pasteVector)
+                    .ignoreAirBlocks(true)
+                    .build();
+            Operations.complete(operation);
+        }
+        replace(locations);
+        if (mobs != null) {
+            for (Mob mob : mobs) {
+                Location loc = new Location(world.getWorld(), pasteVector.getX(), pasteVector.getY() + getRadius().getY(), pasteVector.getZ());
+                mob.spawn(loc);
+            }
+        }
+        for (String line : commandsOnSpawn) {
+            String command = line.replace("%world%", world.getWorldName()).replace("%x%", String.valueOf(pasteVector.getBlockX())).replace("%y%", String.valueOf(pasteVector.getBlockY())).replace("%z%", String.valueOf(pasteVector.getBlockZ()));
+            Bukkit.dispatchCommand(Bukkit.getConsoleSender(), command);
+        }
+    }
+
+    public void build(DataManager dataManager) {
         for (int i = 0; i < spawns; i++) {
             Location location = getRandomLocation();
             if (location == null) {
                 continue;
             }
-            manager.add(location);
-            BlockVector3 paste = BlockVector3.at(location.getX(), location.getY(), location.getZ());
-            storeData(paste);
-            try (EditSession session = WorldEdit.getInstance().newEditSession(BukkitAdapter.adapt(getWorld()))) {
-                Operation operation = new ClipboardHolder(getClipboard())
-                        .createPaste(session)
-                        .to(paste)
-                        .ignoreAirBlocks(true)
-                        .build();
-                Operations.complete(operation);
-            }
-            replace(paste);
-            if (mobs != null) {
-                for (Mob mob : mobs) {
-                    Location loc = new Location(world, location.getX(), location.getY() + getRadius().getY(), location.getZ());
-                    mob.spawn(loc);
-                }
-            }
-            for (String line : commandsOnSpawn) {
-                String command = line.replace("%world%", world.getName()).replace("%x%", String.valueOf(location.getBlockX())).replace("%y%", String.valueOf(location.getBlockY())).replace("%z%", String.valueOf(location.getBlockZ()));
-                Bukkit.dispatchCommand(Bukkit.getConsoleSender(), command);
-            }
+            BlockVector3 pasteLoc = BlockVector3.at(location.getX(), location.getY(), location.getZ());
+            build(dataManager, pasteLoc);
         }
     }
 
-    public void build(Manager manager, Location location) {
+    public void build(DataManager dataManager, Location location) {
         for (int i = 0; i < spawns; i++) {
-            manager.add(location);
-            BlockVector3 paste = BlockVector3.at(location.getX(), location.getY(), location.getZ());
-            storeData(paste);
-            try (EditSession session = WorldEdit.getInstance().newEditSession(BukkitAdapter.adapt(getWorld()))) {
-                Operation operation = new ClipboardHolder(getClipboard())
-                        .createPaste(session)
-                        .to(paste)
-                        .ignoreAirBlocks(true)
-                        .build();
-                Operations.complete(operation);
-            }
-            replace(paste);
-            if (mobs != null) {
-                for (Mob mob : mobs) {
-                    Location loc = new Location(world, location.getX(), location.getY() + getRadius().getY(), location.getZ());
-                    mob.spawn(loc);
-                }
-            }
-            for (String line : commandsOnSpawn) {
-                String command = line.replace("%world%", world.getName()).replace("%x%", String.valueOf(location.getBlockX())).replace("%y%", String.valueOf(location.getBlockY())).replace("%z%", String.valueOf(location.getBlockZ()));
-                Bukkit.dispatchCommand(Bukkit.getConsoleSender(), command);
-            }
+            BlockVector3 pasteLoc = BlockVector3.at(location.getX(), location.getY(), location.getZ());
+            build(dataManager, pasteLoc);
         }
     }
 
-    private void replace(BlockVector3 center) {
-        int x1 = center.getX();
-        int y1 = center.getY() + getRadius().getY();
-        int z1 = center.getZ();
-        for (int x = x1 - getRadius().getX(); x <= x1 + getRadius().getX(); x++) {
-            for (int y = y1 - getRadius().getY(); y <= y1 + getRadius().getY(); y++) {
-                for (int z = z1 - getRadius().getZ(); z <= z1 + getRadius().getZ(); z++) {
-                    Block block = new Location(getWorld(), x, y, z).getBlock();
-                    if (block.getType().equals(replacement)) {
-                        BlockData blockData = Material.AIR.createBlockData();
-                        block.setBlockData(blockData);
-                        StructureData data = new StructureData(block.getLocation());
-                        data.setBlockData(blockData);
-                    }
-                }
-            }
-        }
-    }
-
-    public void deSpawn(UUID uuid, BlockVector3 center) {
-        int x1 = center.getX();
-        int y1 = center.getY() + getRadius().getY();
-        int z1 = center.getZ();
-        for (int x = x1 - getRadius().getX(); x <= x1 + getRadius().getX(); x++) {
-            for (int y = y1 - getRadius().getY(); y <= y1 + getRadius().getY(); y++) {
-                for (int z = z1 - getRadius().getZ(); z <= z1 + getRadius().getZ(); z++) {
-                    Block block = new Location(getWorld(), x, y, z).getBlock();
-                    StructureData data = new StructureData(block.getLocation());
-                    if (data.getUUID().equals(uuid)) {
-                        block.setBlockData(data.getBlockData());
-                        data.delete();
-                    }
-                }
-            }
-        }
-    }
-
-    private void storeData(BlockVector3 center) {
-        int x1 = center.getX();
-        int y1 = center.getY() + getRadius().getY();
-        int z1 = center.getZ();
-        LocalDateTime time = LocalDateTime.now().plusDays(getDespawn());
+    private List<StructureLocation> storeData(DataManager dataManager, BlockVector3 center) {
         UUID uuid = UUID.randomUUID();
+        dataManager.addStructure(new StructureData(uuid, id, getNextDespawn(), center));
+        List<StructureLocation> locations = new ArrayList<>();
+        int x1 = center.getX();
+        int y1 = center.getY() + getRadius().getY();
+        int z1 = center.getZ();
         for (int x = x1 - getRadius().getX(); x <= x1 + getRadius().getX(); x++) {
             for (int y = y1 - getRadius().getY(); y <= y1 + getRadius().getY(); y++) {
                 for (int z = z1 - getRadius().getZ(); z <= z1 + getRadius().getZ(); z++) {
-                    Block block = new Location(getWorld(), x, y, z).getBlock();
-                    StructureData data = new StructureData(block.getLocation());
-                    data.create(uuid, id, center, block.getBlockData(), time);
+                    Block block = new Location(getWorld().getWorld(), x, y, z).getBlock();
+                    StructureLocation location = new StructureLocation(block.getLocation());
+                    locations.add(location);
+                    StructureBlockData structureBlock = new StructureBlockData(uuid, location, block.getBlockData());
+                    dataManager.addStructureBlock(structureBlock);
                 }
             }
         }
+        return locations;
+    }
+
+    private void replace(List<StructureLocation> locations) {
+        for (StructureLocation structureLocation : locations) {
+            Location location = structureLocation.getLocation();
+            if (location == null) {
+                continue;
+            }
+            Material type = location.getBlock().getType();
+            if (type.equals(replacement)) {
+                location.getBlock().setBlockData(Material.AIR.createBlockData());
+            }
+        }
+    }
+
+    public void despawn(DataManager dataManager, StructureData structureData) {
+        UUID uuid = structureData.getUuid();
+        List<StructureBlockData> structureBlocks = dataManager.getStructureBlockData(uuid);
+        for (StructureBlockData structureBlock : structureBlocks) {
+            Location location = structureBlock.getLocation().getLocation();
+            if (location == null) {
+               continue;
+            }
+            location.getBlock().setBlockData(structureBlock.getBlockData());
+        }
+        dataManager.removeStructure(uuid);
     }
 
     private Location getRandomLocation() {
@@ -209,140 +181,131 @@ public class Structure {
         double maxY = Math.max(getLocation1().getY(), getLocation2().getY());
         double minZ = Math.min(getLocation1().getZ(), getLocation2().getZ());
         double maxZ = Math.max(getLocation1().getZ(), getLocation2().getZ());
-        for (int i = 0; i < getTries(); i++) {
-            double x1 = random.nextDouble(minX, maxX);
-            double y1 = random.nextDouble(minY, maxY);
-            double z1 = random.nextDouble(minZ, maxZ);
-
-            Location loc = new Location(getWorld(), x1, y1, z1);
-            Location location = null;
-            if (getType().equals(StructureType.SKY)) {
-                location = setInSky(loc);
+        for (int i = 0; i < tries; i++) {
+            double x = random.nextDouble(minX, maxX);
+            double y = random.nextDouble(minY, maxY);
+            double z = random.nextDouble(minZ, maxZ);
+            Location location = new Location(getWorld().getWorld(), x, y, z).getBlock().getLocation();
+            switch (type) {
+                case SKY:
+                    location = setSky(location);
+                    break;
+                case GROUND:
+                    location = setGround(location);
+                    break;
+                case UNDERGROUND:
+                    location = setUnderground(location);
+                    break;
             }
-            if (getType().equals(StructureType.GROUND)) {
-                location = setOnGround(loc);
-            }
-            if (getType().equals(StructureType.UNDERGROUND)) {
-                location = setInGround(loc);
-            }
-            if (location == null) {
-                return null;
-            }
-            List<Location> locations = new ArrayList<>();
-            for (double x = x1 - getRadius().getX(); x <= x1 + getRadius().getX(); x++) {
-                for (double y = y1 - getRadius().getY(); y <= y1 + getRadius().getY(); y++) {
-                    for (double z = z1 - getRadius().getZ(); z <= z1 + getRadius().getZ(); z++) {
-                        locations.add(new Location(getWorld(), x, y, z));
-                    }
-                }
-            }
-            if (getChecks().hasTown()) {
-                if (plugin.hasTowny()) {
-                    if (isInTown(locations)) {
-                        continue;
-                    }
-                    if (isTownInRange(location)) {
-                        continue;
-                    }
-                }
-            }
-            if (getChecks().hasWater()) {
-                if (isInWater(locations)) {
-                    continue;
-                }
-            }
-            if (getChecks().hasLava()) {
-                if (isInLava(locations)) {
-                    continue;
-                }
-            }
-            if (getChecks().getMustHaveBlocks() != null) {
-                if (isInBlocks(locations)) {
-                    continue;
-                }
-            }
-            if (getChecks().getMustNotHaveBlocks() != null) {
-                if (isNotInBlocks(locations)) {
-                    continue;
-                }
-            }
-            if (getChecks().getMustHaveBiomes() != null) {
-                if (isInBiomes(locations)) {
-                    continue;
-                }
-            }
-            if (getChecks().getMustNotHaveBiomes() != null) {
-                if (isNotInBiomes(locations)) {
-                    continue;
-                }
+            if (!hasRequirements(location)) {
+                continue;
             }
             return location;
         }
         return null;
     }
 
-    private boolean isInBlocks(List<Location> locations) {
-        List<Material> blocks = checks.getMustHaveBlocks();
-        for (Location location : locations) {
-            if (!blocks.contains(location.getBlock().getType())) {
-                continue;
+    private boolean hasRequirements(Location center) {
+        boolean hasMustBlocks = checks.getMustHaveBlocks() == null || checks.getMustHaveBlocks().isEmpty();
+        boolean hasMustNotBlocks = checks.getMustNotHaveBlocks() == null || checks.getMustNotHaveBlocks().isEmpty();
+        boolean hasWater = !checks.hasWater();
+        boolean hasLava = !checks.hasLava();
+        boolean hasMustBiomes = checks.getMustHaveBiomes() == null || checks.getMustHaveBiomes().isEmpty();
+        boolean hasMustNotBiomes = checks.getMustNotHaveBiomes() == null || checks.getMustNotHaveBiomes().isEmpty();
+        boolean hasTown = !checks.hasTown();
+        boolean hasTownInRange = checks.getTownRange() <= 0;
+        if (!hasTownInRange) {
+            if (plugin.hasTowny()) {
+                int radius = checks.getTownRange();
+                for (int x = center.getBlockX() - radius; x <= center.getBlockX() + radius; x++) {
+                    for (int y = center.getWorld().getMinHeight(); y <= center.getWorld().getMaxHeight(); y++) {
+                        for (int z = center.getBlockZ() - radius; z <= center.getBlockZ() + radius; z++) {
+                            Location loc = new Location(center.getWorld(), x, y, z);
+                            if (!TownyAPI.getInstance().isWilderness(loc)) {
+                                return false;
+                            }
+                        }
+                    }
+                }
             }
-            blocks.remove(location.getBlock().getType());
         }
-        return blocks.size() == 0;
+        List<Material> mustBlocks;
+        if (hasMustBlocks) {
+            mustBlocks = new ArrayList<>();
+        }else {
+            mustBlocks = new ArrayList<>(checks.getMustHaveBlocks());
+        }
+        List<Material> mustNotBlocks;
+        if (hasMustNotBlocks) {
+            mustNotBlocks = new ArrayList<>();
+        }else {
+            mustNotBlocks = new ArrayList<>(checks.getMustNotHaveBlocks());
+        }
+        List<Biome> mustBiomes;
+        if (hasMustBiomes) {
+            mustBiomes = new ArrayList<>();
+        }else {
+            mustBiomes = new ArrayList<>(checks.getMustHaveBiomes());
+        }
+        List<Biome> mustNotBiomes;
+        if (hasMustNotBiomes) {
+            mustNotBiomes = new ArrayList<>();
+        }else {
+            mustNotBiomes = new ArrayList<>(checks.getMustNotHaveBiomes());
+        }
+        for (double x = center.getX() - getRadius().getX(); x <= center.getX() + getRadius().getX(); x++) {
+            for (double y = center.getY() - getRadius().getY(); y <= center.getY() + getRadius().getY(); y++) {
+                for (double z = center.getZ() - getRadius().getZ(); z <= center.getZ() + getRadius().getZ(); z++) {
+                    Location location = new Location(center.getWorld(), x, y, z);
+                    Material material = location.getBlock().getType();
+                    if (!hasWater) {
+                        if (material.equals(Material.WATER)) {
+                            return false;
+                        }
+                    }
+                    if (!hasLava) {
+                        if (material.equals(Material.LAVA)) {
+                            return false;
+                        }
+                    }
+                    if (plugin.hasTowny()) {
+                        if (!hasTown) {
+                            if (!TownyAPI.getInstance().isWilderness(location)) {
+                                return false;
+                            }
+                        }
+                    }
+                    if (!hasMustNotBlocks) {
+                        if (mustNotBlocks.contains(material)) {
+                            return false;
+                        }
+                    }
+                    Biome biome = location.getBlock().getBiome();
+                    if (!hasMustNotBiomes) {
+                        if (mustNotBiomes.contains(biome)) {
+                            return false;
+                        }
+                    }
+                    if (!hasMustBlocks) {
+                        mustBlocks.remove(material);
+                        if (mustBlocks.isEmpty()) {
+                            hasMustBlocks = true;
+                        }
+                    }
+                    if (!hasMustBiomes) {
+                        mustBiomes.remove(biome);
+                        if (mustBiomes.isEmpty()) {
+                            hasMustBiomes = true;
+                        }
+                    }
+                }
+            }
+        }
+        return hasMustBlocks && hasMustBiomes;
     }
 
-    private boolean isNotInBlocks(List<Location> locations) {
-        List<Material> blocks = checks.getMustNotHaveBlocks();
-        for (Location location : locations) {
-            if (blocks.contains(location.getBlock().getType())) {
-                return true;
-            }
-        }
-        return false;
-    }
-    
-    private boolean isInWater(List<Location> locations) {
-        for (Location location : locations) {
-            if (location.getBlock().getType().equals(Material.WATER)) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    private boolean isInLava(List<Location> locations) {
-        for (Location location : locations) {
-            if (location.getBlock().getType().equals(Material.LAVA)) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    private boolean isInBiomes(List<Location> locations) {
-        List<Biome> biomes = checks.getMustHaveBiomes();
-        for (Location location : locations) {
-            if (!biomes.contains(location.getBlock().getBiome())) {
-                continue;
-            }
-            biomes.remove(location.getBlock().getBiome());
-        }
-        return biomes.size() == 0;
-    }
-
-    private boolean isNotInBiomes(List<Location> locations) {
-        List<Biome> biomes = checks.getMustNotHaveBiomes();
-        for (Location location : locations) {
-            if (biomes.contains(location.getBlock().getBiome())) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    private Location setOnGround(Location location) {
-        double minY = Math.min(getLocation1().getY(), getLocation2().getY());
+    private Location setGround(Location location) {
+        double minY = Math.min(getLocation1().getY(), getLocation2().getY()) - 1;
         double maxY = Math.max(getLocation1().getY(), getLocation2().getY());
         Location loc = location.getWorld().getHighestBlockAt(location).getLocation();
         if (loc.getY() >= minY && loc.getY() <= maxY) {
@@ -351,10 +314,10 @@ public class Structure {
         return null;
     }
 
-    private Location setInSky(Location location) {
+    private Location setSky(Location location) {
         Random random = new Random();
         int minY = location.getWorld().getHighestBlockYAt(location);
-        int maxY = Math.max(getLocation1().getBlockY(), getLocation2().getBlockY());
+        int maxY = Math.max(getLocation1().getLocation().getBlockY(), getLocation2().getLocation().getBlockY()) - 1;
         int mid = random.nextInt(minY, maxY);
         location.setY(mid);
         Block block = location.getBlock();
@@ -364,10 +327,10 @@ public class Structure {
         return null;
     }
 
-    private Location setInGround(Location location) {
-        int minY = Math.min(getLocation1().getBlockY(), getLocation2().getBlockY());
-        int maxY = Math.max(getLocation1().getBlockY(), getLocation2().getBlockY());
-        for (int y = minY; y < maxY; y++) {
+    private Location setUnderground(Location location) {
+        int minY = Math.min(getLocation1().getLocation().getBlockY(), getLocation2().getLocation().getBlockY());
+        int maxY = Math.max(getLocation1().getLocation().getBlockY(), getLocation2().getLocation().getBlockY());
+        for (int y = minY; y <= maxY; y++) {
             location.setY(y);
             Block block = location.getBlock();
             if (block.isEmpty()) {
@@ -377,34 +340,12 @@ public class Structure {
         return null;
     }
 
-    private boolean isTownInRange(Location location) {
-        int radius = checks.getTownRange();
-        TownyAPI town = TownyAPI.getInstance();
-        for (int x = location.getBlockX() - radius; x <= location.getBlockX() + radius; x++) {
-            for (int y = location.getWorld().getMinHeight(); y <= location.getWorld().getMaxHeight(); y++) {
-                for (int z = location.getBlockZ() - radius; z <= location.getBlockX() + radius; z++) {
-                    Location loc = new Location(location.getWorld(), x, y, z);
-                    if (!town.isWilderness(loc)) {
-                        return true;
-                    }
-                }
-            }
-        }
-        return false;
-    }
-
-    private boolean isInTown(List<Location> locations) {
-        TownyAPI town = TownyAPI.getInstance();
-        for (Location location : locations) {
-            if (!town.isWilderness(location)) {
-                return true;
-            }
-        }
-        return false;
-    }
-
     public LocalDateTime getNextSpawn() {
         return LocalDateTime.now().plusDays(interval);
+    }
+
+    public LocalDateTime getNextDespawn() {
+        return LocalDateTime.now().plusDays(despawn);
     }
 
     public void setRadius(BlockVector3 radius) {
@@ -435,15 +376,15 @@ public class Structure {
         return type;
     }
 
-    public World getWorld() {
+    public StructureWorld getWorld() {
         return world;
     }
 
-    public Location getLocation1() {
+    public StructureLocation getLocation1() {
         return location1;
     }
 
-    public Location getLocation2() {
+    public StructureLocation getLocation2() {
         return location2;
     }
 

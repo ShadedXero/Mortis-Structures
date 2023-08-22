@@ -2,6 +2,7 @@ package me.none030.mortisstructures.manager;
 
 import me.none030.mortisstructures.data.StructureData;
 import me.none030.mortisstructures.structure.Structure;
+import me.none030.mortisstructures.structure.StructureLocation;
 import me.none030.mortisstructures.utils.MessageUtils;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
@@ -45,7 +46,7 @@ public class StructureCommand implements TabExecutor {
                     sender.sendMessage(new MessageUtils("&cPlease enter a valid structure id").color());
                     return false;
                 }
-                structure.build(mainManager.getStructureManager());
+                structure.build(mainManager.getStructureManager().getDataManager());
                 sender.sendMessage(new MessageUtils("&aStructure built").color());
             }
             if (args.length == 6) {
@@ -69,7 +70,7 @@ public class StructureCommand implements TabExecutor {
                     return false;
                 }
                 Location location = new Location(world, x, y, z);
-                structure.build(mainManager.getStructureManager(), location);
+                structure.build(mainManager.getStructureManager().getDataManager(), location);
                 sender.sendMessage(new MessageUtils("&aStructure built").color());
             }
         }
@@ -89,7 +90,7 @@ public class StructureCommand implements TabExecutor {
                 sender.sendMessage(new MessageUtils("&cCould not find any structure").color());
                 return false;
             }
-            structure.build(mainManager.getStructureManager());
+            structure.build(mainManager.getStructureManager().getDataManager());
             sender.sendMessage(new MessageUtils("&aStructure built").color());
         }
         if (args[0].equalsIgnoreCase("despawn")) {
@@ -109,16 +110,16 @@ public class StructureCommand implements TabExecutor {
             double x = Double.parseDouble(args[2]);
             double y = Double.parseDouble(args[3]);
             double z = Double.parseDouble(args[4]);
-            Location loc = new Location(world, x, y, z);
-            StructureData data = new StructureData(loc);
-            if (data.getId() == null) {
+            StructureLocation location = new StructureLocation(new Location(world, x, y, z).getBlock().getLocation());
+            StructureData data = mainManager.getStructureManager().getDataManager().getStructure(location);
+            if (data == null) {
                 return false;
             }
             Structure structure = mainManager.getStructureManager().getStructureById().get(data.getId());
             if (structure == null) {
                 return false;
             }
-            structure.deSpawn(data.getUUID(), data.getCenter());
+            structure.despawn(mainManager.getStructureManager().getDataManager(), data);
             sender.sendMessage(new MessageUtils("&aStructure despawned").color());
         }
         if (args[0].equalsIgnoreCase("reload")) {

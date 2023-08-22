@@ -4,16 +4,13 @@ import com.sk89q.worldedit.extent.clipboard.Clipboard;
 import com.sk89q.worldedit.extent.clipboard.io.ClipboardFormat;
 import com.sk89q.worldedit.extent.clipboard.io.ClipboardFormats;
 import com.sk89q.worldedit.extent.clipboard.io.ClipboardReader;
-import me.none030.mortisstructures.structure.Structure;
-import me.none030.mortisstructures.structure.StructureChecks;
-import me.none030.mortisstructures.structure.StructureType;
+import me.none030.mortisstructures.data.DataManager;
+import me.none030.mortisstructures.data.H2Database;
+import me.none030.mortisstructures.structure.*;
 import me.none030.mortisstructures.structure.mob.Mob;
 import me.none030.mortisstructures.structure.mob.StructureMob;
 import me.none030.mortisstructures.structure.mob.StructureMythicMob;
-import org.bukkit.Bukkit;
-import org.bukkit.Location;
 import org.bukkit.Material;
-import org.bukkit.World;
 import org.bukkit.block.Biome;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
@@ -37,7 +34,26 @@ public class MainConfig extends Config {
     public void loadConfig() {
         File file = saveConfig();
         FileConfiguration config = YamlConfiguration.loadConfiguration(file);
+        DataManager dataManager = loadDatabase(config.getConfigurationSection("database"));
+        if (dataManager == null) {
+            return;
+        }
+        getConfigManager().getMainManager().setStructureManager(new StructureManager(dataManager));
         loadSchematics(config.getConfigurationSection("schematics"));
+    }
+
+    private DataManager loadDatabase(ConfigurationSection section) {
+        if (section == null) {
+            return null;
+        }
+        String fileName = section.getString("file");
+        if (fileName == null) {
+            return null;
+        }
+        File file = new File(getPlugin().getDataFolder(), fileName);
+        String username = section.getString("username");
+        String password = section.getString("password");
+        return new DataManager(new H2Database(file, username, password));
     }
 
     private void loadSchematics(ConfigurationSection schematics) {
@@ -49,7 +65,7 @@ public class MainConfig extends Config {
             if (structure == null) {
                 continue;
             }
-            World world = Bukkit.getWorld(Objects.requireNonNull(structure.getString("world")));
+            StructureWorld world = new StructureWorld(structure.getString("world"));
             int interval = structure.getInt("interval");
             int despawn = structure.getInt("despawn");
             int tries = structure.getInt("tries");
@@ -80,8 +96,8 @@ public class MainConfig extends Config {
             StructureType type = StructureType.valueOf(structure.getString("type"));
             String[] location1 = Objects.requireNonNull(structure.getString("location1")).split(",");
             String[] location2 = Objects.requireNonNull(structure.getString("location2")).split(",");
-            Location loc1 = new Location(world, Double.parseDouble(location1[0]), Double.parseDouble(location1[1]), Double.parseDouble(location1[2]));
-            Location loc2 = new Location(world, Double.parseDouble(location2[0]), Double.parseDouble(location2[1]), Double.parseDouble(location2[2]));
+            StructureLocation loc1 = new StructureLocation(world.getWorldName(), Double.parseDouble(location1[0]), Double.parseDouble(location1[1]), Double.parseDouble(location1[2]));
+            StructureLocation loc2 = new StructureLocation(world.getWorldName(), Double.parseDouble(location2[0]), Double.parseDouble(location2[1]), Double.parseDouble(location2[2]));
             String schematicName = structure.getString("schematic");
             if (schematicName == null) {
                 continue;
